@@ -1,0 +1,5 @@
+* ox-org2gemlog emacs package
+
+Simple package to convert an org file into 1 or multiple gemtext (.gmi) files.
+
+Documentation to be written soon-ish, once the package achieve MVP.
