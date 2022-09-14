@@ -20,32 +20,42 @@
 ;; Thanks to both packages maintainers!
 ;;
 ;; TODO:
-;; - Frontmatter header
+;; - Fix header depth (eg: if the entry is a level 3
+;; entry, it means sublevel will need to go up 3 level)
 ;; - Footnotes bug
 
 ;;; Code:
 
 (require 'org)
-(require 'ox)
+(require 'ox-gemini)
 
+;;;###autoload (put 'ox-org2gemlog-base-dir 'safe-local-variable 'stringp)
 (defcustom ox-org2gemlog-base-dir nil
   "Base directory for gemlog export.
 Set either this value, or the GEMLOG_BASE_DIR global property for
 export."
   :group 'org-export-gemlog
   :type 'directory)
-;;;###autoload (put 'ox-org2gemlog-base-dir 'safe-local-variable 'stringp)
 
 
-(ox-org2gemlog-export-define-derived-backend 'gemlog 'gemini
+(defun ox-org2gemlog-final-output-filter (body _backend _info)
+  (setq entry-date (org-entry-get nil "EXPORT_DATE"))
+  (setq ret (replace-regexp-in-string
+             "^# .*$"
+             (lambda (substring)
+               (concat "---\ntitle: \"" (replace-regexp-in-string "# " "" substring) "\"\ndate: " entry-date "\n---"))
+             body))
+  ret)
+
+(org-export-define-derived-backend 'org2gemlog 'gemini
   :menu-entry
   '(?G "Export to Gemlog"
         (lambda (a s v b)
           (ox-org2gemlog-export-to-path a s v b nil)))
-  ;;;; options-alist
-  ;;                KEY    KEYWORD    OPTION    DEFAULT    BEHAVIOR
-  :options-alist '(;; Variables not setting the front-matter directly
-                   (:gemlog-base-dir "GEMLOG_BASE_DIR" nil ox-org2gemlog-base-dir)))
+  :filters-alist
+  '((:filter-final-output . ox-org2gemlog-final-output-filter))
+  :options-alist
+  '((:gemlog-base-dir "GEMLOG_BASE_DIR" nil ox-org2gemlog-base-dir)))
 
 
 ;;;###autoload
@@ -73,13 +83,12 @@ file-local settings."
       (ox-org2gemlog-export-full-buffer))
 
   (if (equal subtreep 't)
-      ; If EXPORT_FILE_NAME is not found for a specific entry, error:
       (ox-org2gemlog-export-to-gmi async subtreep visible-only body-only ext-plist)))
 
 (defun ox-org2gemlog--get-export-dir (streep)
     "TODO Comment"
-    (let* ((basedir (if (plist-get (org-export-get-environment 'gemlog streep) :gemlog-base-dir)
-                        (file-name-as-directory (plist-get (org-export-get-environment 'gemlog streep) :gemlog-base-dir))
+    (let* ((basedir (if (plist-get (org-export-get-environment 'org2gemlog streep) :gemlog-base-dir)
+                        (file-name-as-directory (plist-get (org-export-get-environment 'org2gemlog streep) :gemlog-base-dir))
                      (user-error "It is mandatory to set the GEMLOG_BASE_DIR property or the 'ox-org2gemlog-base-dir' local variable")))
            (section (if (org-entry-get nil "EXPORT_GEMLOG_SECTION" :inherit)
                         (org-entry-get nil "EXPORT_GEMLOG_SECTION" :inherit)
@@ -89,9 +98,7 @@ file-local settings."
 
 (defun ox-org2gemlog-export-to-gmi (&optional async subtreep visible-only body-only ext-plist)
   "Export file to gmi at the right place within
-the static gemlog generator folder
-
-TODO: Add frontmatter at the top of the export"
+the static gemlog generator folder"
   (interactive)
   (let* ((save-silently (unless noninteractive
                          t))))
@@ -101,7 +108,7 @@ TODO: Add frontmatter at the top of the export"
       (user-error "Not in a valid Gemlog post subtree (missing EXPORT_FILE_NAME); try again")))
   (let* ((export-dir (ox-org2gemlog--get-export-dir subtreep))
          (file (org-export-output-file-name ".gmi" subtreep export-dir)))
-    (org-export-to-file 'gemini file async subtreep visible-only body-only ext-plist)))
+    (org-export-to-file 'org2gemlog file async subtreep visible-only body-only ext-plist)))
 
 ;;;###autoload
 (defun ox-org2gemlog-export-full-buffer ()
