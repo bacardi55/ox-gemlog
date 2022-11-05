@@ -1,3 +1,5 @@
+Official repository and project is on [codeberg](https://codeberg.org/bacardi55/ox-gemlog). Github is only a mirror.
+
 * ox-org2gemlog emacs package
 
 */!\* Don't install as is, I'm clearly discovering elisp and thus my code might be horribly wrong, so have a look (and create a PR in case you find anything wrong!) before using :).
