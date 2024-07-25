@@ -1,4 +1,7 @@
-Official repository and project is on [codeberg](https://codeberg.org/bacardi55/ox-gemlog). Github is only a mirror.
+Official repository and project is on [[https://git.sr.ht/~bacardi55/ox-gemlog][soucehut]]. This repository is archived.
+
+
+
 
 * ox-org2gemlog emacs package
 
